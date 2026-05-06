@@ -1,73 +1,92 @@
-# React + TypeScript + Vite
+# 🧰 RM TOOLKIT
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)
+![Tech](https://img.shields.io/badge/tech-Electron%20%7C%20React%20%7C%20Vite-61DAFB?style=for-the-badge&logo=react)
 
-Currently, two official plugins are available:
+O **RM TOOLKIT** é uma central de comando avançada para desenvolvedores, consultores e administradores do ecossistema **TOTVS RM ERP**. Projetado para substituir ferramentas legadas, ele oferece uma interface moderna, rápida e repleta de automações que simplificam o gerenciamento de ambientes complexos.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Funcionalidades Completas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 👤 Gestão de Perfis (Environments)
+- **Criação e Persistência**: Salve múltiplas configurações de ambiente (Banco, Usuário, Versão RM) e alterne entre elas instantaneamente.
+- **Ambiente Ativo**: Seletor rápido na home com feedback visual (destaque em verde) para o perfil carregado.
+- **Atalho de Adição**: Botão "+" direto no seletor para configurar novos ambientes rapidamente.
 
-## Expanding the ESLint configuration
+### 🚀 Controle de Processos RM
+- **RM.exe**: Início rápido com suporte a **Auto Login** (bypass de autenticação).
+- **RM.Host.exe**: Inicialização monitorada com logs em tempo real filtrados (esconde avisos irrelevantes).
+- **Portal Aluno**: Atalho direto para o portal educacional.
+- **Finalização Forçada**: Botão "Fechar" para encerrar processos RM travados com segurança.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🛠️ Atalhos de Pastas e Arquivos
+- **Acesso Rápido**: Abertura direta das pastas `Bin` e `Custom` de acordo com a versão do RM selecionada.
+- **Gerenciar Aliases**: Interface dedicada para configurar strings de conexão de banco de dados.
+- **Limpeza de DII**: Botão para apagar arquivos `.dii` da pasta Custom de forma automatizada.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### ⚡ Ações Rápidas (Power Actions)
+- **Reiniciar IIS**: Executa o comando `iisreset` de forma transparente.
+- **Gerenciador IIS**: Atalho direto para abrir as configurações do Internet Information Services (`inetmgr`).
+- **Reciclar AppPool**: Reciclagem rápida do Pool de Aplicativos padrão.
+- **Limpar Temp**: Faxina profunda no cache de arquivos temporários do Windows.
+- **Atualizar Bin**: Fluxo simplificado para deploy de artefatos.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 🔍 Inteligência e Conexão
+- **Teste de Rede Real**: Validação de conectividade TCP com o banco de dados (SQL Server ou Oracle) com feedback de porta e IP.
+- **Filtro de Versão Dinâmico**: O sistema só lista Aliases compatíveis com a versão do RM selecionada, evitando erros de inicialização.
+- **Gestão de Alias.dat**: Geração automática e dinâmica do arquivo de configuração de banco na pasta de execução.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### ⚙️ Configurações e Customização
+- **Preferências**: Auto Login, Deletar Broker automaticamente, Logs Verbose e Limpeza de Host.
+- **Multi-idioma**: Interface 100% traduzida para Português (PT) e Inglês (EN).
+- **Design Premium**: Interface em Dark Mode com bordas arredondadas e ícones Lucide.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠️ Tecnologias Utilizadas
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Shell**: [Electron](https://www.electronjs.org/)
+- **Frontend**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/)
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
+- **Estilo**: CSS Vanilla (Modern Layout)
+- **Comunicação**: IPC (Inter-Process Communication) nativo para comandos Windows.
+
+---
+
+## 🚀 Como Iniciar
+
+### Pré-requisitos
+- [Node.js](https://nodejs.org/) (versão LTS recomendada)
+
+### Instalação e Execução
+
+> **Importante:** Todos os comandos devem ser executados dentro da pasta `TOOLKIT`.
+
+1. Entre na pasta do projeto:
+   ```bash
+   cd TOOLKIT
+   ```
+2. Instale as dependências (apenas na primeira vez):
+   ```bash
+   npm install
+   ```
+3. Inicie o TOOLKIT em modo de desenvolvimento:
+   ```bash
+   npm run totvs
+   ```
+4. Para gerar o executável (`.exe`):
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📄 Licença
+Este projeto é de uso restrito e otimizado para o ecossistema TOTVS RM.
+
+---
+<p align="center">
+  Desenvolvido com ❤️ para a comunidade TOTVS RM.
+</p>
