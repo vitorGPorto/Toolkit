@@ -1,0 +1,15 @@
+/* ================================================
+   LOGS VIEW
+================================================ */
+
+.logs-container {
+  flex: 1;
+  background: #000000;
+  border-radius: 12px;
+  margin: 0 16px 16px 16px;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 13px;
+  border: 1px solid #333;
+}

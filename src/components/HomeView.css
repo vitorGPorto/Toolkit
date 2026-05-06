@@ -1,0 +1,193 @@
+/* ================================================
+   HOME VIEW
+================================================ */
+
+.env-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.env-btn {
+  flex: 0 0 auto;
+  min-width: 80px;
+  background-color: var(--bg-button);
+  border: 1px solid transparent;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.env-btn:hover {
+  background-color: var(--bg-button-hover);
+}
+
+.env-btn.active {
+  background-color: rgba(50, 215, 75, 0.1);
+  border-color: #32D74B;
+  color: #32D74B;
+}
+
+.add-env-btn {
+  flex: 0 0 42px;
+  background-color: transparent;
+  border: 1px dashed var(--border-light);
+  color: var(--text-secondary);
+}
+
+.add-env-btn:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+  background-color: rgba(79, 134, 247, 0.05);
+}
+
+/* Process Buttons */
+.process-btn {
+  flex: 1;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  padding: 10px 0;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.process-btn:hover {
+  background-color: #1A1A1D;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.process-btn-danger {
+  color: var(--accent-red);
+}
+
+.process-btn-danger:hover {
+  background-color: rgba(250, 93, 93, 0.1);
+  border-color: var(--accent-red);
+}
+
+/* Shortcuts Grid */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.shortcut-card {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcut-card:hover {
+  background-color: var(--bg-button-hover);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.shortcut-icon-sm {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.shortcut-card span {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.shortcut-card:hover span {
+  color: var(--text-primary);
+}
+
+.shortcut-card--danger {
+  border-color: rgba(250, 93, 93, 0.1);
+}
+
+.shortcut-card--danger:hover {
+  background-color: rgba(250, 93, 93, 0.1);
+  border-color: var(--accent-red);
+}
+
+.shortcut-card--danger span {
+  color: var(--accent-red);
+}
+
+/* Actions Grid */
+.actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.action-card {
+  background-color: var(--bg-panel);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  background-color: #1A1A1D;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.action-card:active {
+  transform: translateY(0);
+}
+
+.action-icon {
+  color: var(--accent-light);
+  width: 20px;
+  height: 20px;
+}
+
+.action-info h3 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.action-info p {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}

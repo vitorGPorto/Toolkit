@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Colors derived from MONOLITH mockups */
+  --bg-app: #0A0A0B; /* Darkest background */
+  --bg-panel: #161618; /* Lighter panel */
+  --bg-button: #212124; /* Button surface */
+  --bg-button-hover: #2A2A2E; 
+  --bg-active: #151A2D; /* Active tab bg */
+  
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --text-muted: #666666;
+  
+  --accent-blue: #4F86F7;
+  --accent-light: #A3CAFF;
+  --accent-red: #FA5D5D;
+  --status-green: #34D399;
+  
+  --border-light: rgba(255, 255, 255, 0.05);
+  
+  /* Layout constraints */
+  --app-max-width: 500px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, sans-serif;
+  user-select: none;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center; /* Center the app on large screens */
+}
+
+#root {
+  width: 100%;
+  max-width: var(--app-max-width);
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-app);
+  border-left: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+}
+
+/* Utility Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
