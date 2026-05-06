@@ -13,6 +13,9 @@ dist-ssr
 dist-electron
 *.local
 
+# Electron build output - binaries are too large for GitHub
+release/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
