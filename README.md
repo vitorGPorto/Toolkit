@@ -1,6 +1,6 @@
 # 🧰 RM TOOLKIT
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)
 ![Tech](https://img.shields.io/badge/tech-Electron%20%7C%20React%20%7C%20Vite-61DAFB?style=for-the-badge&logo=react)
 
