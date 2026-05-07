@@ -406,10 +406,10 @@ function createAliasDat(exeDir: string, alias: any): void {
 </RMSAliasData>`;
 
   try { 
-    fs.writeFileSync(datPath, xml, 'utf-8'); 
-    fs.writeFileSync('C:\\projets\\RM-COMMANDER\\monolith-app\\dist-electron\\msg2.txt', `XML gerado sucesso em ${datPath}`);
+    fs.writeFileSync(datPath, xml, 'utf-8');
+    sendLogToWindow('info', `[Alias.dat] Gerado com sucesso em: ${datPath}`);
   } catch (e: any) {
-    fs.writeFileSync('C:\\projets\\RM-COMMANDER\\monolith-app\\dist-electron\\msg2.txt', `ERRO FATAL AO CRIAR Alias.dat: ${e.message}`);
+    sendLogToWindow('error', `[Alias.dat] ERRO FATAL ao criar Alias.dat: ${e.message}`);
   }
 }
 
@@ -420,12 +420,11 @@ ipcMain.handle('cmd:start-rm', async (_, rmVersion: string, aliasName: string, a
   const aliasConfig = getAliasConfig(aliasName);
   
   if (!aliasConfig) {
-    fs.appendFileSync('C:\\projets\\RM-COMMANDER\\monolith-app\\dist-electron\\msg2.txt', `\n[ERRO FATAL] O Perfil tentou iniciar o RM com o alias "${aliasName}", mas ele NÃO existe na base de aliases. Abortando!`);
+    sendLogToWindow('error', `[START RM] ERRO: Alias "${aliasName}" não encontrado na base de aliases. Abortando!`);
     return { success: false, message: `Alias "${aliasName}" não foi encontrado. Por favor, re-selecione o alias correto nas Configurações (Aba do Perfil)!` };
   }
 
-  // Debug Log
-  fs.appendFileSync('C:\\projets\\RM-COMMANDER\\monolith-app\\dist-electron\\msg2.txt', `\n[START RM] aliasName enviado: ${aliasName} | Achou Config: SIM`);
+  sendLogToWindow('info', `[START RM] Alias encontrado: ${aliasName} ✅`);
 
   createAliasDat(path.dirname(exePath), aliasConfig);
 
@@ -435,7 +434,7 @@ ipcMain.handle('cmd:start-rm', async (_, rmVersion: string, aliasName: string, a
     
     // Passamos sem aspas nos atributos chave=valor porque Delphi As vezes falha ao ler "chave=valor" com aspas envolvendo a chave
     const cmdStr = `"${exePath}" multi=true alias=CorporeRM user=${userStr} password=${passStr} #objetos_gerenciais`;
-    fs.appendFileSync('C:\\projets\\RM-COMMANDER\\monolith-app\\dist-electron\\msg2.txt', `\nExecutando (Spawn Shell): ${cmdStr}`);
+    sendLogToWindow('info', `[START RM] Executando com AutoLogin: ${exePath}`);
 
     const child = spawn(cmdStr, [], { 
       detached: true, 
