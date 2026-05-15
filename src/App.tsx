@@ -5,12 +5,14 @@ import {
   Terminal,
   User,
   Globe,
+  Info,
 } from 'lucide-react';
 import './App.css';
 import HomeView from './components/HomeView';
 import LogsView from './components/LogsView';
 import ProfileView from './components/ProfileView';
 import AliasManager from './components/AliasManager';
+import AboutView from './components/AboutView';
 
 // ── Dictionaries ──────────────────────────────────────────────────────────────
 const dictionaries = {
@@ -45,7 +47,9 @@ const dictionaries = {
     home: "HOME",
     logs: "LOGS",
     profile: "PROFILE",
-    connected: "Connected"
+    about: "ABOUT",
+    connected: "Connected",
+    currentVersion: "Current Version"
   },
   pt: {
     activeEnv: "Ambiente Ativo",
@@ -78,7 +82,9 @@ const dictionaries = {
     home: "INÍCIO",
     logs: "LOGS",
     profile: "PERFIL",
-    connected: "Conectado"
+    about: "SOBRE",
+    connected: "Conectado",
+    currentVersion: "Versão Atual"
   }
 };
 
@@ -392,6 +398,13 @@ export default function App() {
             persistProfiles={persistProfiles}
           />
         )}
+
+        {activeTab === 'about' && (
+          <AboutView
+            t={t}
+            lang={lang}
+          />
+        )}
       </main>
 
       {/* Bottom Dock */}
@@ -418,6 +431,14 @@ export default function App() {
         >
           <User size={22} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
           <span>{t.profile}</span>
+        </button>
+
+        <button
+          className={`dock-item ${activeTab === 'about' ? 'active' : ''}`}
+          onClick={() => setActiveTab('about')}
+        >
+          <Info size={22} strokeWidth={activeTab === 'about' ? 2.5 : 2} />
+          <span>{t.about}</span>
         </button>
       </nav>
 
