@@ -66,6 +66,19 @@ app.whenReady().then(createWindow);
 
 // ====== IPC NATIVE WINDOWS COMMANDS ====== //
 
+ipcMain.handle('app:get-version', () => {
+  return app.getVersion();
+});
+
+ipcMain.handle('app:open-url', async (_, url: string) => {
+  try {
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, message: err.message };
+  }
+});
+
 ipcMain.handle('cmd:iis-reset', async () => {
   return new Promise((resolve) => {
     exec('iisreset', (err, stdout) => {
@@ -413,9 +426,34 @@ function createAliasDat(exeDir: string, alias: any): void {
   }
 }
 
+function updateRegistryPath(binDir: string): Promise<void> {
+  return new Promise((resolve) => {
+    const parentDir = path.dirname(binDir);
+    const commands = [
+      `reg add "HKLM\\SOFTWARE\\WOW6432Node\\CorporeRM\\BDE" /v Directory /t REG_SZ /d "${binDir}" /f`,
+      `reg add "HKLM\\SOFTWARE\\CorporeRM\\BDE" /v Directory /t REG_SZ /d "${binDir}" /f`,
+      `reg add "HKLM\\SOFTWARE\\WOW6432Node\\CorporeRM\\Install" /v InstallPath /t REG_SZ /d "${parentDir}" /f`,
+      `reg add "HKLM\\SOFTWARE\\CorporeRM\\Install" /v InstallPath /t REG_SZ /d "${parentDir}" /f`
+    ];
+
+    let completed = 0;
+    for (const cmd of commands) {
+      exec(cmd, () => {
+        completed++;
+        if (completed === commands.length) {
+          sendLogToWindow('info', `[Registro] Caminho base atualizado para: ${binDir}`);
+          resolve();
+        }
+      });
+    }
+  });
+}
+
 ipcMain.handle('cmd:start-rm', async (_, rmVersion: string, aliasName: string, autoLogin: boolean) => {
   const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
   if (!exePath || !fs.existsSync(exePath)) return { success: false, message: `RM.exe não encontrado.` };
+
+  await updateRegistryPath(path.dirname(exePath));
 
   const aliasConfig = getAliasConfig(aliasName);
   
@@ -456,6 +494,15 @@ ipcMain.handle('cmd:start-host', async (_, rmVersion: string, aliasName: string,
   if (!exePath || !fs.existsSync(exePath)) return { success: false, message: `RM.Host.exe não encontrado.` };
 
   const binDir = path.dirname(exePath);
+
+  // Parar qualquer serviço do RM Host para garantir porta liberada
+  await new Promise<void>((resolve) => {
+    sendLogToWindow('info', `[Serviço] Parando serviço RM.Host.Service caso exista...`);
+    exec('net stop "RM.Host.Service"', () => resolve());
+  });
+
+  // Atualiza o registro para evitar que o host vá buscar arquivos em instalações oficiais (ex: RM-SESC)
+  await updateRegistryPath(binDir);
 
   // ── Deletar _Broker.dat se a opção "Deletar Broker" estiver ativa ──
   if (delBroker) {
@@ -575,9 +622,12 @@ ipcMain.handle('cmd:validate-env', async (_, rmVersion: string) => {
 
 ipcMain.handle('cmd:stop-host', async () => {
   return new Promise((resolve) => {
-    const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
-    exec(cmd, (err) => {
-      resolve({ success: true, message: 'Comando de parada enviado.' });
+    sendLogToWindow('info', `[Serviço] Enviando comando net stop...`);
+    exec('net stop "RM.Host.Service"', () => {
+      const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
+      exec(cmd, (err) => {
+        resolve({ success: true, message: 'Comando de parada e taskkill enviados.' });
+      });
     });
   });
 });

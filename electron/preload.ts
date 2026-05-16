@@ -3,6 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  getAppVersion: () => ipcRenderer.invoke('app:get-version'),
+  openExternalUrl: (url: string) => ipcRenderer.invoke('app:open-url', url),
   iisReset: () => ipcRenderer.invoke('cmd:iis-reset'),
   openInetMgr: () => ipcRenderer.invoke('cmd:open-inetmgr'),
   recycleAppPool: () => ipcRenderer.invoke('cmd:recycle-app-pool'),
