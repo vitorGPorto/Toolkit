@@ -83,6 +83,16 @@
   border-color: var(--accent-red);
 }
 
+.process-btn-host2 {
+  color: #FFB300;
+}
+
+.process-btn-host2:hover {
+  background-color: rgba(255, 179, 0, 0.08);
+  border-color: rgba(255, 179, 0, 0.4);
+  color: #FFB300;
+}
+
 /* Shortcuts Grid */
 .shortcuts-grid {
   display: grid;

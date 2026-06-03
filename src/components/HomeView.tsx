@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Settings,
   RotateCcw,
@@ -8,9 +9,11 @@ import {
   Plus,
   Play,
   Square,
-  User
+  User,
+  Zap,
 } from 'lucide-react';
 import './HomeView.css';
+import DualHostModal from './DualHostModal';
 
 type HomeViewProps = {
   t: any;
@@ -32,6 +35,7 @@ type HomeViewProps = {
   runProcess: (type: 'rm' | 'host' | 'stop' | 'portal') => void;
   runFolderCmd: (cmd: 'openBin' | 'openCustom' | 'delDiiCustom') => void;
   runCommand: (cmd: string) => void;
+  runDualHost: (port: string, httpPort: string, apiPort: string) => Promise<void>;
 };
 
 export default function HomeView({
@@ -47,7 +51,10 @@ export default function HomeView({
   runProcess,
   runFolderCmd,
   runCommand,
+  runDualHost,
 }: HomeViewProps) {
+  const [isDualModalOpen, setDualModalOpen] = useState(false);
+
   return (
     <div className="view-home animate-in">
       <div className="section-header">
@@ -102,9 +109,19 @@ export default function HomeView({
         <button className="process-btn" onClick={() => runProcess('rm')}>
           <Play size={16} fill="currentColor" /> RM
         </button>
-        <button className="process-btn" onClick={() => runProcess('host')}>
+
+        <button className="process-btn" onClick={() => runProcess('host')} title="Iniciar RM.Host.exe">
           <Play size={16} fill="currentColor" /> Host
         </button>
+
+        <button
+          className="process-btn process-btn-host2"
+          onClick={() => setDualModalOpen(true)}
+          title="Iniciar host secundário (RM.Host1.exe)"
+        >
+          <Zap size={15} /> Host 2
+        </button>
+
         <button className="process-btn process-btn-danger" onClick={() => runProcess('stop')}>
           <Square size={16} fill="currentColor" /> Fechar
         </button>
@@ -194,6 +211,15 @@ export default function HomeView({
           </div>
         </div>
       </div>
+
+      {/* Dual Host Modal */}
+      {isDualModalOpen && (
+        <DualHostModal
+          rmVersion={settings.rmVersion}
+          onClose={() => setDualModalOpen(false)}
+          onStart={runDualHost}
+        />
+      )}
     </div>
   );
 }

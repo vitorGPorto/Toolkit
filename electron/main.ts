@@ -624,7 +624,7 @@ ipcMain.handle('cmd:stop-host', async () => {
   return new Promise((resolve) => {
     sendLogToWindow('info', `[Serviço] Enviando comando net stop...`);
     exec('net stop "RM.Host.Service"', () => {
-      const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
+      const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host1.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
       exec(cmd, (err) => {
         resolve({ success: true, message: 'Comando de parada e taskkill enviados.' });
       });
@@ -669,3 +669,117 @@ ipcMain.handle('cmd:check-host-status', async () => {
   });
 });
 
+// ====== DUAL HOST ====== //
+
+/**
+ * Reads Port / HttpPort / ApiPort values from RM.Host.exe.config.
+ * Returns null for any key that is not found.
+ */
+function readHostConfigPorts(binDir: string): { port: string | null; httpPort: string | null; apiPort: string | null } {
+  const configPath = path.join(binDir, 'RM.Host.exe.config');
+  const result = { port: null as string | null, httpPort: null as string | null, apiPort: null as string | null };
+
+  if (!fs.existsSync(configPath)) return result;
+
+  try {
+    const xml = fs.readFileSync(configPath, 'utf-8');
+
+    const extract = (key: string): string | null => {
+      // Matches: <add key="Port" value="8050" />  (with any whitespace / quoting style)
+      const re = new RegExp(`<add\\s+key="${key}"\\s+value="([^"]*)"`, 'i');
+      const m = xml.match(re);
+      return m ? m[1] : null;
+    };
+
+    result.port     = extract('Port');
+    result.httpPort = extract('HttpPort');
+    result.apiPort  = extract('ApiPort');
+  } catch (e: any) {
+    sendLogToWindow('error', `[ReadHostConfig] Erro ao ler config: ${e.message}`);
+  }
+
+  return result;
+}
+
+/**
+ * Replaces the value of a specific <add key="..." value="..."> entry in XML text.
+ */
+function setAppSetting(xml: string, key: string, newValue: string): string {
+  const re = new RegExp(`(<add\\s+key="${key}"\\s+value=")[^"]*("\\s*/?>)`, 'gi');
+  return xml.replace(re, `$1${newValue}$2`);
+}
+
+ipcMain.handle('cmd:read-host-config', async (_, rmVersion: string) => {
+  const exePath = resolveExecutablePath(rmVersion, 'RM.Host.exe');
+  if (!exePath) return { success: false, port: null, httpPort: null, apiPort: null };
+  const binDir = path.dirname(exePath);
+  const ports = readHostConfigPorts(binDir);
+  return { success: true, ...ports };
+});
+
+ipcMain.handle('cmd:start-dual-host', async (_, rmVersion: string, port: string, httpPort: string, apiPort: string) => {
+  // ── 1. Resolve paths ─────────────────────────────────────────────────────
+  const exePath = resolveExecutablePath(rmVersion, 'RM.Host.exe');
+  if (!exePath || !fs.existsSync(exePath)) {
+    return { success: false, message: 'RM.Host.exe não encontrado.' };
+  }
+  const binDir   = path.dirname(exePath);
+  const exe1Path = path.join(binDir, 'RM.Host1.exe');
+  const cfg0Path = path.join(binDir, 'RM.Host.exe.config');
+  const cfg1Path = path.join(binDir, 'RM.Host1.exe.config');
+
+  // ── 2. Copy RM.Host.exe → RM.Host1.exe ───────────────────────────────────
+  try {
+    fs.copyFileSync(exePath, exe1Path);
+    sendLogToWindow('info', `[Dual Host] RM.Host1.exe copiado para: ${exe1Path}`);
+  } catch (e: any) {
+    return { success: false, message: `Falha ao copiar RM.Host.exe: ${e.message}` };
+  }
+
+  // ── 3. Copy & patch RM.Host.exe.config → RM.Host1.exe.config ────────────
+  if (!fs.existsSync(cfg0Path)) {
+    return { success: false, message: `Arquivo de configuração não encontrado: ${cfg0Path}` };
+  }
+
+  try {
+    let xml = fs.readFileSync(cfg0Path, 'utf-8');
+
+    xml = setAppSetting(xml, 'Port',     port);
+    xml = setAppSetting(xml, 'HttpPort', httpPort);
+    xml = setAppSetting(xml, 'ApiPort',  apiPort);
+
+    fs.writeFileSync(cfg1Path, xml, 'utf-8');
+    sendLogToWindow('info', `[Dual Host] RM.Host1.exe.config criado — Port:${port} HttpPort:${httpPort} ApiPort:${apiPort}`);
+  } catch (e: any) {
+    return { success: false, message: `Falha ao criar config do host secundário: ${e.message}` };
+  }
+
+  // ── 4. Spawn RM.Host1.exe (detached, não trava a UI) ─────────────────────
+  try {
+    const child = spawn(`"${exe1Path}"`, [], {
+      detached: true,
+      shell: true,
+      cwd: binDir,
+    });
+
+    if (child.stdout) {
+      child.stdout.setEncoding('latin1');
+      const rl = readline.createInterface({ input: child.stdout });
+      rl.on('line', (line) => { if (!line.includes('WRN]')) sendLogToWindow('stdout', `[Host2] ${line}`); });
+    }
+    if (child.stderr) {
+      child.stderr.setEncoding('latin1');
+      const rl = readline.createInterface({ input: child.stderr });
+      rl.on('line', (line) => { if (!line.includes('WRN]')) sendLogToWindow('stderr', `[Host2] ${line}`); });
+    }
+
+    child.on('error', (err) => sendLogToWindow('error', `[Dual Host] Falha ao iniciar: ${err.message}`));
+    child.on('close', (code) => sendLogToWindow('info', `[Dual Host] RM.Host1 encerrado (código ${code})`));
+    child.unref();
+
+    return { success: true, message: `RM.Host1.exe iniciado — Port:${port} | HttpPort:${httpPort} | ApiPort:${apiPort}` };
+  } catch (err: any) {
+    sendLogToWindow('error', `[Dual Host] Exception: ${err.message}`);
+    return { success: false, message: err.message };
+  }
+});
