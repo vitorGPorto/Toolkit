@@ -206,7 +206,7 @@ export default function App() {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const updateSetting = (key: keyof typeof settings, value: string) => {
+  const updateSetting = (key: string, value: any) => {
     setSettings(prev => {
       const next = { ...prev, [key]: value };
       if (key === 'rmVersion' && value && prev.alias) {
@@ -376,8 +376,10 @@ export default function App() {
             settings={settings}
             hostStatus={hostStatus}
             savedProfiles={savedProfiles}
+            availableAliases={availableAliases}
             loadProfile={loadProfile}
             setSettings={setSettings}
+            updateSetting={updateSetting}
             setActiveTab={setActiveTab}
             setIsAliasModalOpen={setIsAliasModalOpen}
             runProcess={runProcess}
@@ -392,6 +394,7 @@ export default function App() {
             t={t}
             logs={logs}
             setLogs={setLogs}
+            settings={settings}
           />
         )}
 

@@ -11,9 +11,10 @@ type LogsViewProps = {
   t: any;
   logs: LogEntry[];
   setLogs: React.Dispatch<React.SetStateAction<LogEntry[]>>;
+  settings: any;
 };
 
-export default function LogsView({ t, logs, setLogs }: LogsViewProps) {
+export default function LogsView({ t, logs, setLogs, settings }: LogsViewProps) {
   return (
     <div className="view-logs animate-in" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -32,10 +33,14 @@ export default function LogsView({ t, logs, setLogs }: LogsViewProps) {
       </div>
 
       <div className="logs-container">
-        {logs.length === 0 ? (
-          <div style={{ color: '#666', fontStyle: 'italic' }}>Nenhum log disponível.</div>
-        ) : (
-          logs.map((log, idx) => {
+        {(() => {
+          const filteredLogs = settings?.verboseLogs ? logs : logs.filter(log => log.type === 'error' || log.type === 'stderr');
+          
+          if (filteredLogs.length === 0) {
+            return <div style={{ color: '#666', fontStyle: 'italic' }}>Nenhum log disponível.</div>;
+          }
+
+          return filteredLogs.map((log, idx) => {
             let color = '#7a8a99';
             if (log.type === 'error' || log.type === 'stderr') color = '#ff4d4f';
             if (log.type === 'info') color = '#4caf50';
@@ -47,8 +52,8 @@ export default function LogsView({ t, logs, setLogs }: LogsViewProps) {
                 <span style={{ color, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{log.message}</span>
               </div>
             );
-          })
-        )}
+          });
+        })()}
       </div>
     </div>
   );
