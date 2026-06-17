@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   RotateCcw,
@@ -11,6 +11,9 @@ import {
   Zap,
 } from 'lucide-react';
 import totvsIcon from '../assets/totvs-icon.svg';
+import hostIcon from '../assets/host-icon.svg';
+import closeIcon from '../assets/close-icon.svg';
+import rmIcon from '../assets/rm-icon.svg';
 import './HomeView.css';
 import DualHostModal from './DualHostModal';
 
@@ -60,12 +63,20 @@ export default function HomeView({
   const [isDualModalOpen, setDualModalOpen] = useState(false);
   const [autoStartRm, setAutoStartRm] = useState(false);
 
+  const runProcessRef = useRef(runProcess);
+  useEffect(() => {
+    runProcessRef.current = runProcess;
+  }, [runProcess]);
+
   useEffect(() => {
     if (autoStartRm && hostStatus === true) {
-      runProcess('rm');
       setAutoStartRm(false);
+      // Aguarda 3 segundos para garantir que o Host (WCF) subiu completamente
+      setTimeout(() => {
+        runProcessRef.current('rm');
+      }, 3000);
     }
-  }, [hostStatus, autoStartRm, runProcess]);
+  }, [hostStatus, autoStartRm]);
 
   const handleStartAll = () => {
     if (hostStatus === true) {
@@ -139,9 +150,9 @@ export default function HomeView({
         </div>
       </div>
       
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label className="switch" style={{ margin: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <label className="switch-sm" style={{ margin: 0 }}>
             <input 
               type="checkbox" 
               checked={settings.apagarHost} 
@@ -149,11 +160,11 @@ export default function HomeView({
             />
             <span className="slider"></span>
           </label>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Deletar _BrokerCustom (apagarHost)</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>Deletar _BrokerCustom (apagarHost)</span>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label className="switch" style={{ margin: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <label className="switch-sm" style={{ margin: 0 }}>
             <input 
               type="checkbox" 
               checked={settings.delBroker} 
@@ -161,11 +172,11 @@ export default function HomeView({
             />
             <span className="slider"></span>
           </label>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Deletar Broker</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>Deletar Broker</span>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <label className="switch" style={{ margin: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <label className="switch-sm" style={{ margin: 0 }}>
             <input 
               type="checkbox" 
               checked={settings.verboseLogs} 
@@ -173,33 +184,33 @@ export default function HomeView({
             />
             <span className="slider"></span>
           </label>
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Logs Detalhados</span>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600 }}>Logs Detalhados</span>
         </div>
       </div>
 
       {/* Processos RM */}
-      <div className="section-header" style={{ marginTop: '28px' }}>
-        <span className="section-title" style={{ color: '#fff', fontSize: '16px', fontWeight: 800, textTransform: 'none', marginBottom: '8px' }}>
+      <div className="section-header" style={{ marginTop: '24px' }}>
+        <span className="section-title" style={{ color: '#fff', fontSize: '14px', fontWeight: 800, textTransform: 'none', marginBottom: '6px' }}>
           Processos RM
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px', marginBottom: '20px' }}>
         <button 
           className="process-btn" 
           style={{ backgroundColor: 'var(--accent-blue)', color: '#fff', border: 'none' }} 
           onClick={handleStartAll}
           title="Inicia o Host e automaticamente abre o RM quando estiver pronto"
         >
-          <img src={totvsIcon} alt="TOTVS" style={{ width: 18, height: 18 }} /> Iniciar
+          <img src={totvsIcon} alt="TOTVS" style={{ width: 14, height: 14 }} /> Iniciar
         </button>
 
-        <button className="process-btn" onClick={() => runProcess('rm')}>
-          <Play size={16} fill="currentColor" /> RM
+        <button className="process-btn" onClick={() => runProcess('rm')} title="Iniciar RM.exe">
+          <img src={rmIcon} alt="RM" style={{ width: 14, height: 14 }} /> RM
         </button>
 
         <button className="process-btn" onClick={() => runProcess('host')} title="Iniciar RM.Host.exe">
-          <Play size={16} fill="currentColor" /> Host
+          <img src={hostIcon} alt="Host" style={{ width: 14, height: 14 }} /> Host
         </button>
 
         <button
@@ -210,8 +221,8 @@ export default function HomeView({
           <Zap size={15} /> Host 2
         </button>
 
-        <button className="process-btn process-btn-danger" style={{ gridColumn: 'span 2' }} onClick={() => runProcess('stop')}>
-          <Square size={16} fill="currentColor" /> Fechar
+        <button className="process-btn process-btn-danger" style={{ gridColumn: 'span 2' }} onClick={() => runProcess('stop')} title="Finalizar e Limpar">
+          <img src={closeIcon} alt="Finalizar" style={{ width: 14, height: 14 }} /> Finalizar
         </button>
         <button className="process-btn" style={{ gridColumn: 'span 2' }} onClick={() => runProcess('portal')} title="Abrir Portal Aluno no navegador">
           <Globe size={16} /> Portal Aluno

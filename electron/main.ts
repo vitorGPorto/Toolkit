@@ -28,8 +28,9 @@ export function sendLogToWindow(type: 'info' | 'error' | 'stdout' | 'stderr', me
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 500,
-    height: 850,
+    width: 440,
+    height: 740,
+    resizable: false,
     icon: path.join(process.env.VITE_PUBLIC || '', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'), // .mjs is built by vite-plugin-electron
@@ -47,6 +48,10 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
+
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.setZoomFactor(0.85);
+  });
 }
 
 app.on('window-all-closed', () => {
@@ -281,15 +286,11 @@ ipcMain.handle('cmd:test-db-connection', async (_, config) => {
 // ====== RM FOLDER SHORTCUTS ====== //
 
 ipcMain.handle('cmd:open-bin', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const binPath = rmVersion && rmVersion !== 'Bin' 
-    ? path.join(basePath, rmVersion, 'Bin')
-    : path.join(basePath, 'Bin');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada (RM.exe ausente).` };
+  const binPath = path.dirname(exePath);
 
   try {
-    if (!fs.existsSync(binPath)) {
-      return { success: false, message: `Pasta não encontrada: ${binPath}` };
-    }
     const error = await shell.openPath(binPath);
     return { success: !error, message: error || `Opened: ${binPath}` };
   } catch (err: any) {
@@ -298,14 +299,13 @@ ipcMain.handle('cmd:open-bin', async (_, rmVersion: string) => {
 });
 
 ipcMain.handle('cmd:open-custom', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const customPath = rmVersion && rmVersion !== 'Bin'
-    ? path.join(basePath, rmVersion, 'Bin', 'Custom')
-    : path.join(basePath, 'Bin', 'Custom');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada.` };
+  const customPath = path.join(path.dirname(exePath), 'Custom');
 
   try {
     if (!fs.existsSync(customPath)) {
-      return { success: false, message: `Pasta não encontrada: ${customPath}` };
+      return { success: false, message: `Pasta Custom não existe: ${customPath}` };
     }
     const error = await shell.openPath(customPath);
     return { success: !error, message: error || `Opened: ${customPath}` };
@@ -315,20 +315,39 @@ ipcMain.handle('cmd:open-custom', async (_, rmVersion: string) => {
 });
 
 ipcMain.handle('cmd:del-dii-custom', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const customPath = rmVersion && rmVersion !== 'Bin'
-    ? path.join(basePath, rmVersion, 'Bin', 'Custom')
-    : path.join(basePath, 'Bin', 'Custom');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada.` };
+  const customPath = path.join(path.dirname(exePath), 'Custom');
+
   return new Promise((resolve) => {
     try {
       if (!fs.existsSync(customPath)) {
-        resolve({ success: false, message: `Pasta não encontrada: ${customPath}` });
+        resolve({ success: false, message: `Pasta Custom não encontrada: ${customPath}` });
         return;
       }
       const files = fs.readdirSync(customPath);
-      const dlls = files.filter(f => f.toLowerCase().endsWith('.dll'));
-      dlls.forEach(f => fs.unlinkSync(`${customPath}\\${f}`));
-      resolve({ success: true, message: `${dlls.length} DLL(s) apagadas de Custom.` });
+      // Apaga .dll, .dii e .pdb
+      const toDelete = files.filter(f => {
+        const ext = f.toLowerCase();
+        return ext.endsWith('.dll') || ext.endsWith('.dii') || ext.endsWith('.pdb');
+      });
+      
+      let deleted = 0;
+      let failed = 0;
+      toDelete.forEach(f => {
+        try {
+          fs.unlinkSync(path.join(customPath, f));
+          deleted++;
+        } catch (e) {
+          failed++;
+        }
+      });
+
+      if (failed > 0) {
+        resolve({ success: false, message: `Apagou ${deleted}. Falhou em ${failed} (feche o Host).` });
+      } else {
+        resolve({ success: true, message: `${deleted} arquivo(s) apagado(s) de Custom.` });
+      }
     } catch (error: any) {
       resolve({ success: false, message: error.message });
     }
@@ -628,12 +647,15 @@ ipcMain.handle('cmd:validate-env', async (_, rmVersion: string) => {
 
 ipcMain.handle('cmd:stop-host', async () => {
   return new Promise((resolve) => {
-    sendLogToWindow('info', `[Serviço] Enviando comando net stop...`);
-    exec('net stop "RM.Host.Service"', () => {
-      const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host1.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
-      exec(cmd, (err) => {
-        resolve({ success: true, message: 'Comando de parada e taskkill enviados.' });
-      });
+    sendLogToWindow('info', `[Serviço] Parando processos do RM (Fast Kill)...`);
+    
+    // Dispara o net stop em background para não travar a UI caso o serviço demore
+    exec('net stop "RM.Host.Service"');
+
+    // Executa o taskkill imediatamente (finalização forçada e rápida)
+    const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host1.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
+    exec(cmd, () => {
+      resolve({ success: true, message: 'Processos finalizados com sucesso.' });
     });
   });
 });

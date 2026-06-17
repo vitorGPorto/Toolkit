@@ -6,7 +6,8 @@ import {
   ChevronRight,
   Server,
   Plus,
-  Check
+  Check,
+  ArrowLeft
 } from 'lucide-react';
 
 export interface AliasConfig {
@@ -172,13 +173,12 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
         
         {/* Header Block */}
         <header className="alias-page-header">
-          <div className="title-row">
-            <h1>Gerenciar Aliases</h1>
-            <button className="close-btn" onClick={onClose}><X size={24} /></button>
+          <div className="title-row" style={{ alignItems: 'flex-start' }}>
+            <div>
+              <h1>Gerenciar Aliases</h1>
+              <p className="page-desc" style={{ marginTop: '8px' }}>Configure e gerencie conexões de banco de dados para a integração de sistemas RM e plataformas satélites.</p>
+            </div>
           </div>
-          <p className="page-desc">
-            Configure e gerencie conexões de banco de dados para a integração de sistemas RM e plataformas satélites.
-          </p>
         </header>
 
         {/* Active Connections List */}
@@ -447,6 +447,11 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
           </div>
         )}
         
+        <div style={{ marginTop: 'auto', paddingTop: '32px', display: 'flex', justifyContent: 'center' }}>
+          <button className="close-btn-modern" onClick={onClose} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+            <ArrowLeft size={16} /> Voltar para o Início
+          </button>
+        </div>
       </div>
     </div>
   );
