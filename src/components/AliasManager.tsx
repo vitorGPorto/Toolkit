@@ -321,20 +321,22 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
                     className="mockup-input"
                     value={editingAlias.server} 
                     onChange={e => setEditingAlias({...editingAlias, server: e.target.value})}
-                    placeholder="Ex: SRVDCV156\SQL2022"
+                    placeholder={editingAlias.dbType === 'oracle' ? "Ex: HOST/NOME_DO_SERVICO" : "Ex: SRVDCV156\\SQL2022"}
                   />
                 </div>
 
-                <div className="form-group-vertical">
-                  <label>Base de Dados</label>
-                  <input 
-                    type="text" 
-                    className="mockup-input"
-                    value={editingAlias.base} 
-                    onChange={e => setEditingAlias({...editingAlias, base: e.target.value})}
-                    placeholder="Ex: CorporeRM"
-                  />
-                </div>
+                {editingAlias.dbType === 'sql' && (
+                  <div className="form-group-vertical">
+                    <label>Base de Dados</label>
+                    <input 
+                      type="text" 
+                      className="mockup-input"
+                      value={editingAlias.base} 
+                      onChange={e => setEditingAlias({...editingAlias, base: e.target.value})}
+                      placeholder="Ex: CorporeRM"
+                    />
+                  </div>
+                )}
                 
                 <div className="form-grid-2">
                   <div className="form-group-vertical">

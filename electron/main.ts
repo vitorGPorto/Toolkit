@@ -220,16 +220,22 @@ ipcMain.handle('cmd:test-db-connection', async (_, config) => {
   const { server, type } = config;
   if (!server) return { success: false, message: "Host do servidor é obrigatório." };
 
-  // Parse host and port (Handles "host,port", "host:port" or "host")
+  // Parse host and port (Handles "host,port", "host:port", "host/service", or "host")
   let host = server;
   let port = type === 'sql' ? 1433 : 1521; // Defaults
 
-  if (server.includes(',')) {
-    const parts = server.split(',');
+  // First handle Oracle style 'host/service'
+  if (host.includes('/')) {
+    host = host.split('/')[0];
+  }
+
+  // Then handle ports if specified via , or :
+  if (host.includes(',')) {
+    const parts = host.split(',');
     host = parts[0].trim();
     port = parseInt(parts[1].trim()) || port;
-  } else if (server.includes(':')) {
-    const parts = server.split(':');
+  } else if (host.includes(':')) {
+    const parts = host.split(':');
     host = parts[0].trim();
     port = parseInt(parts[1].trim()) || port;
   }
