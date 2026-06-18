@@ -25,6 +25,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkHostStatus: () => ipcRenderer.invoke('cmd:check-host-status'),
   validateEnv: (version: string) => ipcRenderer.invoke('cmd:validate-env', version),
   openPortalAluno: () => ipcRenderer.invoke('cmd:open-portal-aluno'),
+  readHostConfig: (version: string) => ipcRenderer.invoke('cmd:read-host-config', version),
+  startDualHost: (version: string, port: string, httpPort: string, apiPort: string) =>
+    ipcRenderer.invoke('cmd:start-dual-host', version, port, httpPort, apiPort),
   onAppLog: (callback: (data: any) => void) => {
     const handler = (_event: any, data: any) => callback(data);
     ipcRenderer.on('app-log', handler);

@@ -28,8 +28,9 @@ export function sendLogToWindow(type: 'info' | 'error' | 'stdout' | 'stderr', me
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 500,
-    height: 850,
+    width: 440,
+    height: 740,
+    resizable: false,
     icon: path.join(process.env.VITE_PUBLIC || '', 'icon.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'), // .mjs is built by vite-plugin-electron
@@ -47,6 +48,10 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
+
+  win.webContents.on('did-finish-load', () => {
+    win?.webContents.setZoomFactor(0.85);
+  });
 }
 
 app.on('window-all-closed', () => {
@@ -220,16 +225,22 @@ ipcMain.handle('cmd:test-db-connection', async (_, config) => {
   const { server, type } = config;
   if (!server) return { success: false, message: "Host do servidor é obrigatório." };
 
-  // Parse host and port (Handles "host,port", "host:port" or "host")
+  // Parse host and port (Handles "host,port", "host:port", "host/service", or "host")
   let host = server;
   let port = type === 'sql' ? 1433 : 1521; // Defaults
 
-  if (server.includes(',')) {
-    const parts = server.split(',');
+  // First handle Oracle style 'host/service'
+  if (host.includes('/')) {
+    host = host.split('/')[0];
+  }
+
+  // Then handle ports if specified via , or :
+  if (host.includes(',')) {
+    const parts = host.split(',');
     host = parts[0].trim();
     port = parseInt(parts[1].trim()) || port;
-  } else if (server.includes(':')) {
-    const parts = server.split(':');
+  } else if (host.includes(':')) {
+    const parts = host.split(':');
     host = parts[0].trim();
     port = parseInt(parts[1].trim()) || port;
   }
@@ -275,15 +286,11 @@ ipcMain.handle('cmd:test-db-connection', async (_, config) => {
 // ====== RM FOLDER SHORTCUTS ====== //
 
 ipcMain.handle('cmd:open-bin', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const binPath = rmVersion && rmVersion !== 'Bin' 
-    ? path.join(basePath, rmVersion, 'Bin')
-    : path.join(basePath, 'Bin');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada (RM.exe ausente).` };
+  const binPath = path.dirname(exePath);
 
   try {
-    if (!fs.existsSync(binPath)) {
-      return { success: false, message: `Pasta não encontrada: ${binPath}` };
-    }
     const error = await shell.openPath(binPath);
     return { success: !error, message: error || `Opened: ${binPath}` };
   } catch (err: any) {
@@ -292,14 +299,13 @@ ipcMain.handle('cmd:open-bin', async (_, rmVersion: string) => {
 });
 
 ipcMain.handle('cmd:open-custom', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const customPath = rmVersion && rmVersion !== 'Bin'
-    ? path.join(basePath, rmVersion, 'Bin', 'Custom')
-    : path.join(basePath, 'Bin', 'Custom');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada.` };
+  const customPath = path.join(path.dirname(exePath), 'Custom');
 
   try {
     if (!fs.existsSync(customPath)) {
-      return { success: false, message: `Pasta não encontrada: ${customPath}` };
+      return { success: false, message: `Pasta Custom não existe: ${customPath}` };
     }
     const error = await shell.openPath(customPath);
     return { success: !error, message: error || `Opened: ${customPath}` };
@@ -309,20 +315,39 @@ ipcMain.handle('cmd:open-custom', async (_, rmVersion: string) => {
 });
 
 ipcMain.handle('cmd:del-dii-custom', async (_, rmVersion: string) => {
-  const basePath = 'C:\\RM\\Legado';
-  const customPath = rmVersion && rmVersion !== 'Bin'
-    ? path.join(basePath, rmVersion, 'Bin', 'Custom')
-    : path.join(basePath, 'Bin', 'Custom');
+  const exePath = resolveExecutablePath(rmVersion, 'RM.exe');
+  if (!exePath) return { success: false, message: `Pasta Bin não encontrada.` };
+  const customPath = path.join(path.dirname(exePath), 'Custom');
+
   return new Promise((resolve) => {
     try {
       if (!fs.existsSync(customPath)) {
-        resolve({ success: false, message: `Pasta não encontrada: ${customPath}` });
+        resolve({ success: false, message: `Pasta Custom não encontrada: ${customPath}` });
         return;
       }
       const files = fs.readdirSync(customPath);
-      const dlls = files.filter(f => f.toLowerCase().endsWith('.dll'));
-      dlls.forEach(f => fs.unlinkSync(`${customPath}\\${f}`));
-      resolve({ success: true, message: `${dlls.length} DLL(s) apagadas de Custom.` });
+      // Apaga .dll, .dii e .pdb
+      const toDelete = files.filter(f => {
+        const ext = f.toLowerCase();
+        return ext.endsWith('.dll') || ext.endsWith('.dii') || ext.endsWith('.pdb');
+      });
+      
+      let deleted = 0;
+      let failed = 0;
+      toDelete.forEach(f => {
+        try {
+          fs.unlinkSync(path.join(customPath, f));
+          deleted++;
+        } catch (e) {
+          failed++;
+        }
+      });
+
+      if (failed > 0) {
+        resolve({ success: false, message: `Apagou ${deleted}. Falhou em ${failed} (feche o Host).` });
+      } else {
+        resolve({ success: true, message: `${deleted} arquivo(s) apagado(s) de Custom.` });
+      }
     } catch (error: any) {
       resolve({ success: false, message: error.message });
     }
@@ -622,12 +647,15 @@ ipcMain.handle('cmd:validate-env', async (_, rmVersion: string) => {
 
 ipcMain.handle('cmd:stop-host', async () => {
   return new Promise((resolve) => {
-    sendLogToWindow('info', `[Serviço] Enviando comando net stop...`);
-    exec('net stop "RM.Host.Service"', () => {
-      const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
-      exec(cmd, (err) => {
-        resolve({ success: true, message: 'Comando de parada e taskkill enviados.' });
-      });
+    sendLogToWindow('info', `[Serviço] Parando processos do RM (Fast Kill)...`);
+    
+    // Dispara o net stop em background para não travar a UI caso o serviço demore
+    exec('net stop "RM.Host.Service"');
+
+    // Executa o taskkill imediatamente (finalização forçada e rápida)
+    const cmd = 'taskkill /F /IM RM.Host.exe /IM RM.Host1.exe /IM RM.Host.Service.exe /IM RM.Host.JobRunner.exe /IM RMHost.exe /IM RM.exe /T';
+    exec(cmd, () => {
+      resolve({ success: true, message: 'Processos finalizados com sucesso.' });
     });
   });
 });
@@ -669,3 +697,117 @@ ipcMain.handle('cmd:check-host-status', async () => {
   });
 });
 
+// ====== DUAL HOST ====== //
+
+/**
+ * Reads Port / HttpPort / ApiPort values from RM.Host.exe.config.
+ * Returns null for any key that is not found.
+ */
+function readHostConfigPorts(binDir: string): { port: string | null; httpPort: string | null; apiPort: string | null } {
+  const configPath = path.join(binDir, 'RM.Host.exe.config');
+  const result = { port: null as string | null, httpPort: null as string | null, apiPort: null as string | null };
+
+  if (!fs.existsSync(configPath)) return result;
+
+  try {
+    const xml = fs.readFileSync(configPath, 'utf-8');
+
+    const extract = (key: string): string | null => {
+      // Matches: <add key="Port" value="8050" />  (with any whitespace / quoting style)
+      const re = new RegExp(`<add\\s+key="${key}"\\s+value="([^"]*)"`, 'i');
+      const m = xml.match(re);
+      return m ? m[1] : null;
+    };
+
+    result.port     = extract('Port');
+    result.httpPort = extract('HttpPort');
+    result.apiPort  = extract('ApiPort');
+  } catch (e: any) {
+    sendLogToWindow('error', `[ReadHostConfig] Erro ao ler config: ${e.message}`);
+  }
+
+  return result;
+}
+
+/**
+ * Replaces the value of a specific <add key="..." value="..."> entry in XML text.
+ */
+function setAppSetting(xml: string, key: string, newValue: string): string {
+  const re = new RegExp(`(<add\\s+key="${key}"\\s+value=")[^"]*("\\s*/?>)`, 'gi');
+  return xml.replace(re, `$1${newValue}$2`);
+}
+
+ipcMain.handle('cmd:read-host-config', async (_, rmVersion: string) => {
+  const exePath = resolveExecutablePath(rmVersion, 'RM.Host.exe');
+  if (!exePath) return { success: false, port: null, httpPort: null, apiPort: null };
+  const binDir = path.dirname(exePath);
+  const ports = readHostConfigPorts(binDir);
+  return { success: true, ...ports };
+});
+
+ipcMain.handle('cmd:start-dual-host', async (_, rmVersion: string, port: string, httpPort: string, apiPort: string) => {
+  // ── 1. Resolve paths ─────────────────────────────────────────────────────
+  const exePath = resolveExecutablePath(rmVersion, 'RM.Host.exe');
+  if (!exePath || !fs.existsSync(exePath)) {
+    return { success: false, message: 'RM.Host.exe não encontrado.' };
+  }
+  const binDir   = path.dirname(exePath);
+  const exe1Path = path.join(binDir, 'RM.Host1.exe');
+  const cfg0Path = path.join(binDir, 'RM.Host.exe.config');
+  const cfg1Path = path.join(binDir, 'RM.Host1.exe.config');
+
+  // ── 2. Copy RM.Host.exe → RM.Host1.exe ───────────────────────────────────
+  try {
+    fs.copyFileSync(exePath, exe1Path);
+    sendLogToWindow('info', `[Dual Host] RM.Host1.exe copiado para: ${exe1Path}`);
+  } catch (e: any) {
+    return { success: false, message: `Falha ao copiar RM.Host.exe: ${e.message}` };
+  }
+
+  // ── 3. Copy & patch RM.Host.exe.config → RM.Host1.exe.config ────────────
+  if (!fs.existsSync(cfg0Path)) {
+    return { success: false, message: `Arquivo de configuração não encontrado: ${cfg0Path}` };
+  }
+
+  try {
+    let xml = fs.readFileSync(cfg0Path, 'utf-8');
+
+    xml = setAppSetting(xml, 'Port',     port);
+    xml = setAppSetting(xml, 'HttpPort', httpPort);
+    xml = setAppSetting(xml, 'ApiPort',  apiPort);
+
+    fs.writeFileSync(cfg1Path, xml, 'utf-8');
+    sendLogToWindow('info', `[Dual Host] RM.Host1.exe.config criado — Port:${port} HttpPort:${httpPort} ApiPort:${apiPort}`);
+  } catch (e: any) {
+    return { success: false, message: `Falha ao criar config do host secundário: ${e.message}` };
+  }
+
+  // ── 4. Spawn RM.Host1.exe (detached, não trava a UI) ─────────────────────
+  try {
+    const child = spawn(`"${exe1Path}"`, [], {
+      detached: true,
+      shell: true,
+      cwd: binDir,
+    });
+
+    if (child.stdout) {
+      child.stdout.setEncoding('latin1');
+      const rl = readline.createInterface({ input: child.stdout });
+      rl.on('line', (line) => { if (!line.includes('WRN]')) sendLogToWindow('stdout', `[Host2] ${line}`); });
+    }
+    if (child.stderr) {
+      child.stderr.setEncoding('latin1');
+      const rl = readline.createInterface({ input: child.stderr });
+      rl.on('line', (line) => { if (!line.includes('WRN]')) sendLogToWindow('stderr', `[Host2] ${line}`); });
+    }
+
+    child.on('error', (err) => sendLogToWindow('error', `[Dual Host] Falha ao iniciar: ${err.message}`));
+    child.on('close', (code) => sendLogToWindow('info', `[Dual Host] RM.Host1 encerrado (código ${code})`));
+    child.unref();
+
+    return { success: true, message: `RM.Host1.exe iniciado — Port:${port} | HttpPort:${httpPort} | ApiPort:${apiPort}` };
+  } catch (err: any) {
+    sendLogToWindow('error', `[Dual Host] Exception: ${err.message}`);
+    return { success: false, message: err.message };
+  }
+});

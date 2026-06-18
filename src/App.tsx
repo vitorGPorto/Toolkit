@@ -206,7 +206,7 @@ export default function App() {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const updateSetting = (key: keyof typeof settings, value: string) => {
+  const updateSetting = (key: string, value: any) => {
     setSettings(prev => {
       const next = { ...prev, [key]: value };
       if (key === 'rmVersion' && value && prev.alias) {
@@ -290,6 +290,20 @@ export default function App() {
     }
   };
 
+  const runDualHost = async (port: string, httpPort: string, apiPort: string): Promise<void> => {
+    const api = (window as any).electronAPI;
+    if (!api?.startDualHost) {
+      showToast(`Simulation: Dual Host port=${port} httpPort=${httpPort} apiPort=${apiPort}`);
+      return;
+    }
+    try {
+      const result = await api.startDualHost(settings.rmVersion, port, httpPort, apiPort);
+      showToast(result.success ? `⚡ ${result.message}` : `❌ ${result.message}`);
+    } catch (e) {
+      showToast(`❌ IPC Error: ${e}`);
+    }
+  };
+
   const runCommand = async (cmd: string) => {
     if (!(window as any).electronAPI) {
       showToast(`⚠️ Electron não ativo (modo simulação)`);
@@ -362,13 +376,16 @@ export default function App() {
             settings={settings}
             hostStatus={hostStatus}
             savedProfiles={savedProfiles}
+            availableAliases={availableAliases}
             loadProfile={loadProfile}
             setSettings={setSettings}
+            updateSetting={updateSetting}
             setActiveTab={setActiveTab}
             setIsAliasModalOpen={setIsAliasModalOpen}
             runProcess={runProcess}
             runFolderCmd={runFolderCmd}
             runCommand={runCommand}
+            runDualHost={runDualHost}
           />
         )}
 
@@ -377,6 +394,7 @@ export default function App() {
             t={t}
             logs={logs}
             setLogs={setLogs}
+            settings={settings}
           />
         )}
 

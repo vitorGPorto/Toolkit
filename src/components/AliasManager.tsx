@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { 
-  X, 
   Trash2, 
   Database,
   ChevronRight,
   Server,
   Plus,
-  Check
+  Check,
+  ArrowLeft
 } from 'lucide-react';
 
 export interface AliasConfig {
@@ -172,13 +172,12 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
         
         {/* Header Block */}
         <header className="alias-page-header">
-          <div className="title-row">
-            <h1>Gerenciar Aliases</h1>
-            <button className="close-btn" onClick={onClose}><X size={24} /></button>
+          <div className="title-row" style={{ alignItems: 'flex-start' }}>
+            <div>
+              <h1>Gerenciar Aliases</h1>
+              <p className="page-desc" style={{ marginTop: '8px' }}>Configure e gerencie conexões de banco de dados para a integração de sistemas RM e plataformas satélites.</p>
+            </div>
           </div>
-          <p className="page-desc">
-            Configure e gerencie conexões de banco de dados para a integração de sistemas RM e plataformas satélites.
-          </p>
         </header>
 
         {/* Active Connections List */}
@@ -321,20 +320,22 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
                     className="mockup-input"
                     value={editingAlias.server} 
                     onChange={e => setEditingAlias({...editingAlias, server: e.target.value})}
-                    placeholder="Ex: SRVDCV156\SQL2022"
+                    placeholder={editingAlias.dbType === 'oracle' ? "Ex: HOST/NOME_DO_SERVICO" : "Ex: SRVDCV156\\SQL2022"}
                   />
                 </div>
 
-                <div className="form-group-vertical">
-                  <label>Base de Dados</label>
-                  <input 
-                    type="text" 
-                    className="mockup-input"
-                    value={editingAlias.base} 
-                    onChange={e => setEditingAlias({...editingAlias, base: e.target.value})}
-                    placeholder="Ex: CorporeRM"
-                  />
-                </div>
+                {editingAlias.dbType === 'sql' && (
+                  <div className="form-group-vertical">
+                    <label>Base de Dados</label>
+                    <input 
+                      type="text" 
+                      className="mockup-input"
+                      value={editingAlias.base} 
+                      onChange={e => setEditingAlias({...editingAlias, base: e.target.value})}
+                      placeholder="Ex: CorporeRM"
+                    />
+                  </div>
+                )}
                 
                 <div className="form-grid-2">
                   <div className="form-group-vertical">
@@ -445,6 +446,11 @@ export default function AliasManager({ onClose, onSaved }: AliasManagerProps) {
           </div>
         )}
         
+        <div style={{ marginTop: 'auto', paddingTop: '32px', display: 'flex', justifyContent: 'center' }}>
+          <button className="close-btn-modern" onClick={onClose} style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+            <ArrowLeft size={16} /> Voltar para o Início
+          </button>
+        </div>
       </div>
     </div>
   );

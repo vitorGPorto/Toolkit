@@ -51,19 +51,21 @@
 
 /* Process Buttons */
 .process-btn {
-  flex: 1;
+  flex: 1 1 100px;
+  min-width: 100px;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-light);
-  padding: 10px 0;
+  padding: 8px 10px;
   border-radius: 8px;
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -83,6 +85,16 @@
   border-color: var(--accent-red);
 }
 
+.process-btn-host2 {
+  color: #FFB300;
+}
+
+.process-btn-host2:hover {
+  background-color: rgba(255, 179, 0, 0.08);
+  border-color: rgba(255, 179, 0, 0.4);
+  color: #FFB300;
+}
+
 /* Shortcuts Grid */
 .shortcuts-grid {
   display: grid;
@@ -95,12 +107,12 @@
   background-color: var(--bg-panel);
   border: 1px solid var(--border-light);
   border-radius: 10px;
-  padding: 12px 6px;
+  padding: 10px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -151,10 +163,10 @@
 .action-card {
   background-color: var(--bg-panel);
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   border: 1px solid transparent;
@@ -190,4 +202,80 @@
   color: var(--text-secondary);
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+/* Custom Select Styles */
+.modern-select {
+  appearance: none;
+  background-color: var(--bg-button);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  padding-right: 36px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.modern-select:hover, .modern-select:focus {
+  border-color: var(--accent-blue);
+  background-color: var(--bg-button-hover);
+}
+
+.select-wrapper .select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Small Switch Variant */
+.switch-sm {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+.switch-sm input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch-sm .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-button);
+  transition: .3s;
+  border-radius: 34px;
+}
+.switch-sm .slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.switch-sm input:checked + .slider {
+  background-color: var(--accent-blue);
+}
+.switch-sm input:checked + .slider:before {
+  transform: translateX(16px);
 }
