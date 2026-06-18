@@ -5,8 +5,6 @@ import {
   RefreshCw,
   Trash2,
   Globe,
-  Play,
-  Square,
   User,
   Zap,
 } from 'lucide-react';

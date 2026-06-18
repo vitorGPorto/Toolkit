@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { 
-  X, 
   Trash2, 
   Database,
   ChevronRight,
