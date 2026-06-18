@@ -1,7 +1,7 @@
 {
   "name": "rm-toolkit",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Central de comando para gerenciamento de ambientes TOTVS RM ERP",
   "author": "TOTVS RM Team",
   "main": "dist-electron/main.js",
