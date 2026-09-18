@@ -1,19 +1,36 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
+# Pipeline de demonstracao do build do RM Toolkit no Azure DevOps.
 trigger:
-- main
+  branches:
+    include:
+      - main
+
+pr:
+  branches:
+    include:
+      - main
 
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+  - checkout: self
+    displayName: 'Obter codigo'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - task: UseNode@1
+    displayName: 'Configurar Node.js 24'
+    inputs:
+      version: '24.x'
+
+  - script: npm ci
+    displayName: 'Instalar dependencias'
+
+  - script: npm run build
+    displayName: 'Compilar TypeScript, Vite e Electron'
+
+  - publish: $(Build.SourcesDirectory)/dist
+    artifact: frontend
+    displayName: 'Publicar artefato do frontend'
+
+  - publish: $(Build.SourcesDirectory)/dist-electron
+    artifact: electron
+    displayName: 'Publicar artefato do Electron'
