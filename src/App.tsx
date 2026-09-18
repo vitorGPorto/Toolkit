@@ -480,7 +480,7 @@ export default function App() {
           onSaved={() => { refreshAliases(); }}
         />
       )}
-       {/* Alias Manager Modal */}
+      {/* Alias Manager Modal */}
     </div>
   );
 }
