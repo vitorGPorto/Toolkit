@@ -473,14 +473,14 @@ export default function App() {
         </div>
       )}
 
-      {/* Alias Manager Modal */}
+
       {isAliasModalOpen && (
         <AliasManager
           onClose={() => setIsAliasModalOpen(false)}
           onSaved={() => { refreshAliases(); }}
         />
       )}
-      {/* Alias Manager Modal */}
+     
     </div>
   );
 }
